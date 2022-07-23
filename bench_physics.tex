@@ -1,0 +1,223 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage{physics}
+\usepackage{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\begin{document}
+\everymath{\displaystyle}
+\ensuremath{f\qty[x,y]=\frac{g(x,y)\pdv{f}{x} -f\qty(x,y)\pdv{g}{x}}{\qty\big[g\qty(x,y)]^2}}
+
+\let\dd\undefined
+\let\abs\undefined
+
+\makeatletter
+% Constants
+% May be redundant
+\gdef\fn@s{s} %square [x]
+\gdef\fn@c{c} %braces {x}
+\gdef\fn@v{v} %vert |x|
+\gdef\fn@abs{abs} % dvert ||x||
+\gdef\fn@a{a} % angled <x>
+\gdef\fn@r{r} %round (x)
+\gdef\br@Bigg{Bg}
+\gdef\br@bigg{bg}
+\gdef\br@Big{B}
+\gdef\br@big{b}
+\gdef\br@norm{n}
+
+\def\br@kern{}%was .05em
+\def\br@kern@min{}%was -0.033em
+\newcommand{\br@typarse}[2][r]{% Parse the type of brackets to output
+	\def\fn@arg{#1}
+	% \typeout{You gave me '\fn@arg'\space of catcode \the\expandafter\catcode`#1}
+	\let\fn@L( \let\fn@R)
+	\ifx\fn@arg\fn@r\let\br@kern\br@kern@min
+	\else
+		\ifx\fn@arg\fn@s\let\fn@L[\let\fn@R]
+		\else
+			\ifx\fn@arg\fn@v\let\fn@L|\let\fn@R|
+			\else
+				\ifx\fn@arg\fn@c\let\fn@L\{\let\fn@R\}\let\br@kern\br@kern@min
+				\else
+					\ifx\fn@arg\fn@a\let\fn@L\langle\let\fn@R\rangle\let\br@kern\br@kern@min
+					\else
+						\ifx\fn@arg\fn@abs\let\fn@L\|\let\fn@R\|
+						\else\errmessage{%
+							Invalid option for bracket type!
+							Supported types are:[r, s, v, c, a, abs]%
+						}
+						\fi
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+	\left\fn@L\br@kern#2\br@kern\right\fn@R%
+}
+\newcommand{\br@szparse}{% Parse the size of brackets to output
+	\@ifstar{\br@szparse@nolr}{\br@szparse@lr}%
+}
+\newcommand{\br@szparse@lr}[4]{%
+	% #1: arg for bracket size
+	% #2: left-side bracket type
+	% #3: content
+	% #4: right-side bracket type
+	\def\sz@arg{#1}
+	\ifx\sz@arg\br@norm \left#2 #3\right#4
+	\else
+		\ifx\sz@arg\br@Bigg \Biggl#2 #3\Biggr#4
+		\else
+			\ifx\sz@arg\br@bigg \biggl#2 #3 \biggr#4
+			\else
+				\ifx\sz@arg\br@Big \Bigl#2 #3 \Bigr#4
+				\else
+					\ifx\sz@arg\br@big \bigl#2 #3 \bigr#4
+					\else
+					\errmessage{%
+						Invalid option for bracket size!
+						Available options are: [\br@Bigg,\br@bigg,\br@Big,\br@big, or None]%
+					}
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+}
+\newcommand{\br@szparse@nolr}[4]{%
+	% Same as szparse@lr, but for big instead of big[lr] etc.
+	\def\sz@arg{#1}
+	\ifx\sz@arg\br@norm \left#2 #3\right#4
+	\else
+		\ifx\sz@arg\br@Bigg \Bigg#2 #3 \Bigg#4
+		\else
+			\ifx\sz@arg\br@bigg \bigg#2 #3 \bigg#4
+			\else
+				\ifx\sz@arg\br@Big \Big#2 #3 \Big#4
+				\else
+					\ifx\sz@arg\br@big \big#2 #3 \big#4
+					\else
+					\errmessage{%
+						Invalid option for bracket size!
+						Available options are: [\br@Bigg,\br@bigg,\br@Big,\br@big, or None]%
+					}
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+}
+
+% To use \d, we must move accentchar \d to \udot
+\let\udot\d
+\let\d\undefined
+
+% Simple dx with exponents
+\def\dd@kern{}%was -0.02em
+\newcommand{\d}{\ensuremath{\@ifstar{\d@exp}{\d@one}}}
+\long\def\d@one#1{\mathrm{d}\dd@kern#1}
+\newcommand{\d@exp}[2][2]{\mathrm{d}^{#1}\dd@kern#2}
+
+% Partial dx with exponents
+\newcommand{\pd}{\ensuremath{\@ifstar{\pd@exp}{\pd@one}}}
+\long\def\pd@one#1{\partial\dd@kern#1}
+\newcommand{\pd@exp}[2][2]{\partial^{#1}\dd@kern#2}
+
+% Single dy/dx with exponents
+\newcommand{\dd}{\ensuremath{\@ifstar{\dd@exp}{\dd@one}}}
+\long\def\dd@one#1#2{\frac{\d{#1}}{\d{#2}}}
+\newcommand{\dd@exp}[3][2]{\frac{\d*[#1]#2}{\d#3^{#1}}}
+
+% Partial dy/dx with exponents
+\newcommand{\pdd}{\ensuremath{\@ifstar{\pdd@exp}{\pdd@one}}}
+\long\def\pdd@one#1#2{\frac{\pd{#1}}{\pd{#2}}}
+\newcommand{\pdd@exp}[3][2]{\frac{\pd*[#1]#2}{\pd#3^{#1}}}
+
+% Functions
+\def\fn@kern{\!}
+\newcommand{\fn}{\ensuremath{\@ifstar{\fn@exp}{\fn@one}}}
+\newcommand{\fn@one}[3][r]{#2\fn@kern\br@typarse[#1]{#3}\fn@kern}
+\newcommand{\fn@exp}[4][r]{#2^{#3}\fn@kern\br@typarse[#1]{#4}\fn@kern}
+
+% Named things
+\newcommand{\leibniz}[3]{\ensuremath{#1'\kern-.1667em\brac[b]{ #2'\kern-.1667em \brac{#3} }\cdot#2'\kern-.1667em\brac{#3}}}
+
+% Brackets
+\newcommand{\anybrac}[4][n]{\br@szparse{#1}{#2}{#3}{#4}}
+\newcommand{\brac}[2][n]{\br@szparse{#1}{(}{#2}{)}}
+\newcommand{\sbrac}[2][n]{\br@szparse{#1}{[}{#2}{]}}
+\newcommand{\cbrac}[2][n]{\br@szparse{#1}{\{}{#2}{\}}}
+\newcommand{\vbrac}[2][n]{\br@szparse*{#1}{|}{#2}{|}}
+\newcommand{\abs}[2][n]{\br@szparse*{#1}{\|}{#2}{\|}}
+\newcommand{\abrac}[2][n]{\br@szparse{#1}{\langle}{#2}{\rangle}}
+\newcommand{\floor}[2][n]{\br@szparse{#1}{\lfloor}{#2}{\rfloor}}
+\newcommand{\ceil}[2][n]{\br@szparse{#1}{\lceil}{#2}{\rceil}}
+\let\bra\undefined \let\ket\undefined \let\braket\undefined
+\newcommand{\bra}[2][n]{\br@szparse{#1}{\langle}{#2}{|}}
+\newcommand{\ket}[2][n]{\br@szparse{#1}{|}{#2}{\rangle}}
+\newcommand{\braket}[3][b]{\br@szparse{#1}{\langle}{#2}{.}\br@szparse{#1}{|}{#3}{\rangle}}
+
+\let\eval\undefined
+\newcommand{\eval}{\@ifstar{\eval@simple}{\eval@exp}}
+\newcommand{\eval@simple}[4][B]{\br@szparse{#1}{.}{#2}{|}^{#3}_{#4}}
+\newcommand{\eval@exp}[4][n]{\br@szparse{#1}{.}{#2}{|}^{#3}_{#4}}
+\makeatother
+
+
+{\color{magenta}\ensuremath{%
+	% \fn[s]{f}{x,y}=\eval{\frac{\fn{g}{x,y}\pdd{f}{x}-\fn{f}{x,y}\pdd{g}{x}}{\sbrac[b]{\fn{g}{x,y}}^2}}{8}{0}
+	\bra{H_{ij}} \implies \ket{\hat{H}_{ij}}
+	\braket[n]{\the\delimiterfactor:\the\delimitershortfall}{\hat{H}_{ij}\the\delimiterfactor:\the\delimitershortfall}
+}}
+
+\section{Testing Bracket Types}
+\long\def\brtypetest#1#2{%
+	\vbox{
+		$$\openup1\jot\tabskip0pt plus1fil
+		\halign to \hsize{
+			\hfil\tt##\hfil&\hfil\ensuremath{\displaystyle ##}\hfil\cr
+			\omit\span\hfil {\tt \text{\textbackslash} fn[\ *\ ]\{\ {\color{magenta}\#1}\ \}\{ {\color{magenta}\ \#2}\ \}}\hfil\cr\noalign{\bigskip}
+			\omit\hfil Option (\ *\ )\hfil & \omit \hfil Output\hfil \cr\noalign{\smallskip\hrule\medskip}
+			$\emptyset$, r & \fn{#1}{#2}\cr
+			s & \fn[s]{#1}{#2}\cr
+			v & \fn[v]{#1}{#2}\cr
+			c & \fn[c]{#1}{#2}\cr
+			a & \fn[a]{#1}{#2}\cr
+			abs & \fn[abs]{#1}{#2}\cr\noalign{\medskip\hrule}
+		}$$
+	}
+}
+
+% \def\alphabet{a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z}
+
+% \foreach \a in \alphabet{%
+% 	\noindent$\sbrac{\fn{\a}{\a,\,\a}}^2\qquad\fn[s]{\a}{\dd*[2]{\a}{\a}}$
+
+% }
+
+\subsection{Sized Brackets}
+\long\def\brsize#1{%
+	\vbox{
+		$$\openup1\jot\tabskip0pt plus1fil
+		\halign to \hsize{
+			\hfil\tt\textbackslash##\hfil&\hfil\ensuremath{\displaystyle ##}\hfil\cr
+			% \omit\span\hfil {\tt \text{\textbackslash} fn[\ *\ ]\{\ {\color{magenta}\#1}\ \}\{ {\color{magenta}\ \#2}\ \}}\hfil\cr\noalign{\bigskip}
+			\omit\hfil Function\hfil & \omit \hfil Output\hfil \cr\noalign{\smallskip\hrule\medskip}
+			brac & \brac[Bg]{\brac[bg]{\brac[B]{\brac[b]{#1}}}}\;\brac[b]{\brac[B]{\brac[bg]{\brac[Bg]{#1}}}}\cr
+			sbrac & \sbrac[Bg]{\sbrac[bg]{\sbrac[B]{\sbrac[b]{#1}}}}\;\sbrac[b]{\sbrac[B]{\sbrac[bg]{\sbrac[Bg]{#1}}}}\cr
+			cbrac & \cbrac[Bg]{\cbrac[bg]{\cbrac[B]{\cbrac[b]{#1}}}}\;\cbrac[b]{\cbrac[B]{\cbrac[bg]{\cbrac[Bg]{#1}}}}\cr
+			vbrac & \vbrac[Bg]{\vbrac[bg]{\vbrac[B]{\vbrac[b]{#1}}}}\;\vbrac[b]{\vbrac[B]{\vbrac[bg]{\vbrac[Bg]{#1}}}}\cr
+			abrac & \abrac[Bg]{\abrac[bg]{\abrac[B]{\abrac[b]{#1}}}}\;\abrac[b]{\abrac[B]{\abrac[bg]{\abrac[Bg]{#1}}}}\cr
+			abs & \abs[Bg]{\abs[bg]{\abs[B]{\abs[b]{#1}}}}\;\abs[b]{\abs[B]{\abs[bg]{\abs[Bg]{#1}}}}\cr
+			floor & \floor[Bg]{\floor[bg]{\floor[B]{\floor[b]{#1}}}}\;\floor[b]{\floor[B]{\floor[bg]{\floor[Bg]{#1}}}}\cr
+			ceil & \ceil[Bg]{\ceil[bg]{\ceil[B]{\ceil[b]{#1}}}}\;\ceil[b]{\ceil[B]{\ceil[bg]{\ceil[Bg]{#1}}}}\cr\noalign{\medskip\hrule}
+		}$$
+	}
+}
+
+\[
+	\anybrac[B]{\langle}{\fn{f}{x, y}}{|}
+\]
+
+\end{document}

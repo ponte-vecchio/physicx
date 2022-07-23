@@ -1,0 +1,204 @@
+\documentclass{article}
+\usepackage[colorlinks=true]{hyperref}
+\makeatletter
+% Constants
+% May be redundant
+\gdef\fn@s{s} %square [x]
+\gdef\fn@c{c} %braces {x}
+\gdef\fn@v{v} %vert |x|
+\gdef\fn@abs{abs} % dvert ||x||
+\gdef\fn@a{a} % angled <x>
+\gdef\fn@r{r} %round (x)
+\gdef\br@Bigg{Bg}
+\gdef\br@bigg{bg}
+\gdef\br@Big{B}
+\gdef\br@big{b}
+
+\newcommand{\br@typarse}[2][r]{% Parse the type of brackets to output
+	\def\fn@arg{#1}
+	\let\fn@L( \let\fn@R)
+	\ifx\fn@arg\fn@r \relax
+	\else
+		\ifx\fn@arg\fn@s	\let\fn@L[	\let\fn@R]
+		\else
+			\ifx\fn@arg\fn@v	\let\fn@L|	\let\fn@R|
+			\else
+				\ifx\fn@arg\fn@c	\let\fn@L\{	\let\fn@R\}
+				\else
+					\ifx\fn@arg\fn@a	\let\fn@L\langle \let\fn@R\rangle
+					\else
+						\ifx\fn@arg\fn@abs \let\fn@L\| \let\fn@R\|
+						\else\errmessage{%
+							Invalid option for bracket type!
+							Supported types are:[r, s, v, c, a, abs]%
+						}
+						\fi
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+	\fn@L#2\fn@R%
+}
+\newcommand{\br@szparse}{% Parse the size of brackets to output
+	\@ifstar{\br@szparse@nolr}{\br@szparse@lr}%
+}
+\newcommand{\br@szparse@lr}[4]{%
+	% #1: arg for bracket size
+	% #2: left-side bracket type
+	% #3: content
+	% #4: right-side bracket type
+	\def\sz@arg{#1}
+	\ifx\sz@arg\empty \left#2 #3 \right#4
+	\else
+	\ifx\sz@arg\br@Bigg \Biggl#2 #3 \Biggr#4
+	\else
+	\ifx\sz@arg\br@bigg \biggl#2 #3 \biggr#4
+	\else
+	\ifx\sz@arg\br@Big \Bigl#2 #3 \Bigr#4
+	\else
+	\ifx\sz@arg\br@big \bigl#2 #3 \bigr#4
+	\else
+	\expandafter\errmessage{%
+		Invalid option for bracket size!
+		Available options are: [\br@Bigg,\br@bigg,\br@Big,\br@big, or None]%
+	}
+	\fi
+	\fi
+	\fi
+	\fi
+	\fi	
+}
+\newcommand{\br@szparse@nolr}[4]{%
+	% Same as szparse@lr, but for big instead of big[lr] etc.
+	\def\sz@arg{#1}
+	\ifx\sz@arg\empty \left#2 #3 \right#4
+	\else
+		\ifx\sz@arg\br@Bigg \Bigg#2 #3 \Bigg#4
+		\else
+			\ifx\sz@arg\br@bigg \bigg#2 #3 \bigg#4
+			\else
+				\ifx\sz@arg\br@Big \Big#2 #3 \Big#4
+				\else
+					\ifx\sz@arg\br@big \big#2 #3 \big#4
+					\else
+					\expandafter\errmessage{%
+						Invalid option for bracket size!
+						Available options are: [\br@Bigg,\br@bigg,\br@Big,\br@big, or None]%
+					}
+					\fi
+				\fi
+			\fi
+		\fi
+	\fi
+}
+
+% To use \d, we must move accentchar \d to \udot
+\let\udot\d
+\let\d\undefined
+
+% Simple dx with exponents
+\newcommand{\d}{\ensuremath{\@ifstar{\d@exp}{\d@one}}}
+\long\def\d@one#1{\mathrm{d}#1}
+\newcommand{\d@exp}[2][2]{\mathrm{d}^{#1}#2}
+
+% Partial dx with exponents
+\newcommand{\pd}{\ensuremath{\@ifstar{\pd@exp}{\pd@one}}}
+\long\def\pd@one#1{\partial #1}
+\newcommand{\pd@exp}[2][2]{\partial^{#1}#2}
+
+% Single dy/dx with exponents
+\newcommand{\dd}{\ensuremath{\@ifstar{\dd@exp}{\dd@one}}}
+\long\def\dd@one#1#2{\frac{\d{#1}}{\d{#2}}\,}
+\newcommand{\dd@exp}[3][2]{\frac{\d*[#1]#2}{\d#3^{#1}}}
+
+% Partial dy/dx with exponents
+\newcommand{\pdd}{\ensuremath{\@ifstar{\pdd@exp}{\pdd@one}}}
+\long\def\pdd@one#1#2{\frac{\pd{#1}}{\pd{#2}}}
+\newcommand{\pdd@exp}[3][2]{\frac{\pd*[#1]#2}{\pd#3^{#1}}}
+
+% Functions
+\newcommand{\fn}{\ensuremath{\@ifstar{\fn@exp}{\fn@one}}}
+\newcommand{\fn@one}[3][r]{#2\br@typarse[#1]{#3}}
+\newcommand{\fn@exp}[4][r]{#2^{#3}\br@typarse[#1]{#4}}
+
+% Named things
+\newcommand{\leibniz}[3]{\ensuremath{#1'\kern-.1667em\brac[b]{ #2'\kern-.1667em \brac{#3} }\cdot#2'\kern-.1667em\brac{#3}}}
+
+
+
+% Brackets
+\newcommand{\brac}[2][]{\br@szparse{#1}{(}{#2}{)}}
+\newcommand{\sbrac}[2][]{\br@szparse{#1}{[}{#2}{]}}
+\newcommand{\cbrac}[2][]{\br@szparse{#1}{\{}{#2}{\}}}
+\newcommand{\vbrac}[2][]{\br@szparse*{#1}{|}{#2}{|}}
+\newcommand{\abs}[2][]{\br@szparse*{#1}{\|}{#2}{\|}}
+\newcommand{\abrac}[2][]{\br@szparse{#1}{\langle}{#2}{\rangle}}
+\newcommand{\floor}[2][]{\br@szparse{#1}{\lfloor}{#2}{\rfloor}}
+\newcommand{\ceil}[2][]{\br@szparse{#1}{\lceil}{#2}{\rceil}}
+
+\makeatother
+
+
+\begin{document}
+\title{The {\tt physicx} package}
+\author{Leothelion\\ {\tt zkogdxdkur\kern.1667em(\kern-.067em at\kern-.067em)\kern.1667emp.monash.edu}}
+\date{\today}
+\maketitle
+
+\tableofcontents\pagebreak
+\section{Before You Begin}
+\subsection{The purpose of this package}
+
+The goal of this package was to make writing physics simple and intuitive with its syntax in line with the conventions of \LaTeX\ and \TeX\ thereof.
+
+\subsection{How to use {\tt physicx} in your \LaTeX\ or \TeX\ document}
+
+For \LaTeX\ users, simply add {\verb|\usepackage{physicx}|} to your preamble as per the standard procedure for loading packages:
+
+\noindent\hrulefill
+\begin{verbatim}
+\documentclass[ ... ]{ ... }
+
+\usepackage{physicx}
+
+\begin{document}
+	
+...
+
+\end{document}
+\end{verbatim}
+\hrulefill\vskip1em
+
+For \TeX\ users, load the package by using the \verb|\input| command such that:
+
+\noindent\hrulefill
+\begin{verbatim}
+...
+
+\input physicx
+
+...
+\end{verbatim}
+\hrulefill\pagebreak
+
+\section{List of Commands}
+\everymath{\displaystyle}
+\subsection{Brackets}
+% \ensuremath{\foreach \j in {0,1,...,7175}{\fn[s]{f}{x,y}=\frac{\fn{g}{x,y}\pdd{f}{x}-\fn{f}{x,y}\pdd{g}{x}}{\sbrac[b]{\fn{g}{x,y}}^2}}}
+\vbox{
+	\ialign{\tabskip=2em
+		% Command | Examples | Description
+		\hss\tt #&
+		\hss$#$\hss&
+		\hss$#$\hss&
+		# \hss\cr
+		\verb+\brac+ & \brac{a}& \brac{\hbox{\Huge g}}&round brackets\cr
+		\verb+\sbrac+&\sbrac{a}&\sbrac{\hbox{\Huge g}}&square brackets\cr
+		\verb+\cbrac+&\cbrac{a}&\cbrac{\hbox{\Huge g}}&curly brackets\cr
+		\verb+\vbrac+&\vbrac{a}&\vbrac{\hbox{\Huge g}}&vertical brackets\cr
+		\verb+\abs+  &  \abs{a}&  \abs{\hbox{\Huge g}}&absolute\cr
+	}
+}
+
+\end{document}
